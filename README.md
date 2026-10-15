@@ -1,28 +1,24 @@
-# 404 Modular MKII — v0.3 (Windows VST3 source)
+# 404 Modular MKII — stable foundation (source)
 
-Unofficial, independently written SP-404 MKII-inspired multi-effects plugin. Not affiliated with Roland. It does **not** contain Roland's original DSP or an exact emulation.
+Independent JUCE 8 VST3 effect, not affiliated with Roland. Eight working prototype DSP modules: Vinyl Sim, Lo-Fi, Isolator, Drive, Chorus, Tape Echo, Reverb, Tremolo. Every module has bypass, mix and amount. Global output, bypass and DAW project-state persistence. Dark interface. Fixed module order.
 
-## Included
-- 20 simultaneous, independently switchable effects: Vinyl Sim, Cassette, 303 Vinyl, Lo-Fi, Bit Crusher, Isolator, Filter + Drive, Wah, DJFX Looper, Scatter, Chorus, Flanger, Phaser, Delay, Tape Echo, Reverb, Compressor, Saturator, Ring Mod, Tremolo.
-- Four knobs per effect: MIX / CHAR / MOVE / TONE (the last three are generalized macro controls, not exact hardware parameters).
-- Five starter presets, global bypass, output gain, project state saving and DAW automation.
-- Scrollable effect cards (5 rows, 3 visible). All effects currently run in a fixed series.
-- DSP refinements to chorus/flanger modulation interpolation, tape echo, reverb damping, vinyl processing, and DJFX loop addressing.
+## Windows build without local programming tools
 
-## Build on Windows
-1. Install **Visual Studio 2022** with **Desktop development with C++**, **CMake**, and **Git**.
-2. Open **Developer PowerShell for VS 2022** in the extracted project directory.
-3. Run:
+Upload **the contents of this directory** to the root of a GitHub repository, preserving `.github/workflows/windows-vst3.yml`, `Source/`, and `CMakeLists.txt`. Actions → Windows VST3 Build → Run workflow. A successful run should expose an artifact containing `404 Modular MKII.vst3` (a Windows VST3 directory bundle). Unzip and copy that bundle to `C:\Program Files\Common Files\VST3\`, then rescan plugins in your DAW.
 
-```powershell
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+## Important limitations
+
+This source has not been compiled on Windows or DAW-tested in this environment. A green Actions build is required before installation; audio and UI still need hands-on testing. These effects are **original approximations**, not bit-identical SP-404 MKII effects. The DSP is a first stable *foundation*, not the complete SP-404 effect catalog. Delay and reverb are simple algorithms, not studio-quality final designs. Parameters are loaded per block, so abrupt automation can cause zipper noise. No BPM sync, oversampling, presets browser, or rearrangeable chain yet.
+
+## Local build
+
+Requires CMake >=3.22, Git, Visual Studio 2022 C++ build tools, internet access to fetch JUCE 8.0.10:
+
+```
+cmake -S . -B build -A x64
 cmake --build build --config Release
 ```
 
-4. Find the VST3 bundle under `build/SP404_Modular_artefacts/Release/VST3/` and copy it to `C:\Program Files\Common Files\VST3` (administrator permission may be needed).
-5. Rescan plugins in your DAW.
+## If Actions fails
 
-JUCE is fetched from GitHub during configuration; an internet connection is required for the initial build.
-
-## Known limitations
-**Source package only; not compiled or tested in a Windows DAW in this environment.** This is a feature-complete *prototype*, not a verified production-ready release. The DSP is an approximation; some modules are intentionally simple (especially Scatter, DJFX Looper, Reverb). No BPM sync, drag-and-drop reorder, oversampling, advanced preset management, or full hardware-accurate control set. High-feedback settings may create loud output; start with low monitor volume. The plugin is stereo-only. No external Roland samples, artwork, or trademarks are included.
+Open the failing step and copy the first `error` or `CMake Error` lines, not just `exit code 1`. `Node.js 20 deprecated` warnings from checkout v4 are not usually the compilation failure.
