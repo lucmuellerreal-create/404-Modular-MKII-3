@@ -1,42 +1,30 @@
-
 name: Windows VST3 Build
-
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
-
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   build:
-    runs-on: windows-latest
-
+    runs-on: windows-2022
     steps:
-      - name: Checkout project
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Download JUCE
-        uses: actions/checkout@v4
-        with:
-          repository: juce-framework/JUCE
-          ref: 8.0.10
-          path: JUCE
-
-      - name: Configure VST3
+      - name: Configure
+        run: cmake -S . -B build -A x64
+      - name: Build VST3
+        run: cmake --build build --config Release --parallel 2
+      - name: Package VST3
         shell: pwsh
         run: |
-          $project = Get-ChildItem -Recurse -Filter CMakeLists.txt |
-            Where-Object { $_.FullName -notmatch '[\\/]JUCE[\\/]' } |
-            Select-Object -First 1
-          if (-not $project) { throw "CMakeLists.txt not found" }
-          cmake -S "$($project.Directory.FullName)" -B build -A x64 -DJUCE_DIR="${{ github.workspace }}/JUCE"
-
-      - name: Build VST3
-        run: cmake --build build --config Release
-
-      - name: Upload plugin
+          $plugins = @(Get-ChildItem -Path build -Filter '*.vst3' -Recurse -Directory | Where-Object { $_.FullName -notmatch '\\Contents\\' })
+          if ($plugins.Count -eq 0) { throw 'No .vst3 bundle found' }
+          New-Item -ItemType Directory -Force -Path artifact | Out-Null
+          foreach ($plugin in $plugins) { Copy-Item -Path $plugin.FullName -Destination artifact -Recurse -Force }
+      - name: Upload VST3
         uses: actions/upload-artifact@v4
         with:
-          name: 404-Modular-VST3
-          path: build/**/*.vst3/**
+          name: 404-Modular-MKII-Windows-VST3
+          path: artifact/
           if-no-files-found: error
